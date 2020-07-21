@@ -27,6 +27,11 @@ import (
 	"mosn.io/mosn/pkg/types"
 )
 
+// 先冲BufferValue获取，如果没有的话
+// 再从BufferPool获取，如果也没有的话
+// syncPool 会调用BufferPoolCtx.New
+// 创建一个, 并放到BufferValue，返回
+
 const maxBufferPool = 16
 
 var (
@@ -60,6 +65,7 @@ type ifaceWords struct {
 	data unsafe.Pointer
 }
 
+// BufferPoolCtx 是一个包含Index, New, Reset接口
 // setIdex sets index, poolCtx must embedded TempBufferCtx
 func setIndex(poolCtx types.BufferPoolCtx, i int) {
 	p := (*ifaceWords)(unsafe.Pointer(&poolCtx))
@@ -77,6 +83,9 @@ func RegisterBuffer(poolCtx types.BufferPoolCtx) {
 	setIndex(poolCtx, int(i))
 }
 
+// 其实对sync.Pool封装,
+// 而BufferPoolCtx其实对Pool创建
+// 和回收操作
 // bufferPool is buffer pool
 type bufferPool struct {
 	ctx types.BufferPoolCtx
@@ -113,6 +122,7 @@ func NewBufferPoolContext(ctx context.Context) context.Context {
 	return mosnctx.WithValue(ctx, types.ContextKeyBufferPoolCtx, newBufferValue())
 }
 
+// 把src上下文值复制dest， 并清空src上下文值
 // TransmitBufferPoolContext copy a context
 func TransmitBufferPoolContext(dst context.Context, src context.Context) {
 	sValue := PoolContext(src)
@@ -124,6 +134,7 @@ func TransmitBufferPoolContext(dst context.Context, src context.Context) {
 	sValue.value = nullBufferValue
 }
 
+// 创建buffer值
 // newBufferValue returns bufferValue
 func newBufferValue() (value *bufferValue) {
 	v := vPool.Get()
