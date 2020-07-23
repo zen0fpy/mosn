@@ -45,6 +45,7 @@ func checkConsistency(path string, size int) error {
 	return nil
 }
 
+// 共享内存块
 type ShmSpan struct {
 	origin []byte
 	name   string

@@ -42,6 +42,8 @@ type shardWorkerPool struct {
 	numShards  int
 }
 
+// 把size分成几个切片
+// 以前是一个对队列容量为size, 现在是几个队列总量为size, 减少锁竞争
 // NewShardWorkerPool creates a new shard worker pool.
 func NewShardWorkerPool(size int, numShards int, workerFunc WorkerFunc) (ShardWorkerPool, error) {
 	if size <= 0 {
@@ -55,7 +57,7 @@ func NewShardWorkerPool(size int, numShards int, workerFunc WorkerFunc) (ShardWo
 	for i := range shards {
 		shards[i] = &shard{
 			index:   i,
-			jobChan: make(chan interface{}, shardCap),
+			jobChan: make(chan interface{}, shardCap), // 一个切片，job队列大小
 		}
 	}
 	return &shardWorkerPool{
@@ -67,14 +69,17 @@ func NewShardWorkerPool(size int, numShards int, workerFunc WorkerFunc) (ShardWo
 
 func (pool *shardWorkerPool) Init() {
 	for i := range pool.shards {
+		// 根据切片数, 生成worker
 		pool.spawnWorker(pool.shards[i])
 	}
 }
 
+// 第几块切片
 func (pool *shardWorkerPool) Shard(source uint32) uint32 {
 	return source % uint32(pool.numShards)
 }
 
+// 把job放到切片job队列
 func (pool *shardWorkerPool) Offer(job ShardJob, block bool) {
 	// use shard to avoid excessive synchronization
 	i := pool.Shard(job.Source())
@@ -89,6 +94,7 @@ func (pool *shardWorkerPool) Offer(job ShardJob, block bool) {
 	}
 }
 
+// 为job切片分配goroutine, 如果失败次数没有超过16，会创建新goroutine
 func (pool *shardWorkerPool) spawnWorker(shard *shard) {
 	utils.GoWithRecover(func() {
 		pool.workerFunc(shard.index, shard.jobChan)
@@ -109,7 +115,7 @@ type workerPool struct {
 func NewWorkerPool(size int) WorkerPool {
 	return &workerPool{
 		work: make(chan func()),
-		sem:  make(chan struct{}, size),
+		sem:  make(chan struct{}, size), // 控制goroutine数目
 	}
 }
 

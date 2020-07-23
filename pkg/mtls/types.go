@@ -43,6 +43,7 @@ var version = map[string]uint16{
 
 // Curves
 var (
+	// 椭圆曲线算法, 密钥交换
 	defaultCurves = []tls.CurveID{
 		tls.X25519,
 		tls.CurveP256,

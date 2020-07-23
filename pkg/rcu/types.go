@@ -33,6 +33,7 @@ type element struct {
 	count int32
 }
 
+// Read Copy Update Lock
 // Value is an rcu value used as rcu lock, have no export fields, can keep any data
 type Value struct {
 	element atomic.Value

@@ -69,6 +69,9 @@ func (v *Value) Put(i interface{}) {
 	}
 }
 
+// 如果值引用数为0, 才能update成功
+// 如果超时,就返回超时错误
+// 如果有一个更新正在执行，就返回阻塞
 // Update can update the value directly, but will return success until the data used count is zero or reach timeout
 // If it is reached timeout, it will returns a timeout error with value updated
 // If a Update is not returned, the other Update will be blocked, and returns a block error without value updated
@@ -80,6 +83,7 @@ func (v *Value) Update(i interface{}, wait time.Duration) error {
 	e := &element{i: i}
 	old := v.element.Load()
 	if old != nil {
+		// 设置过期
 		v.expired.Store(old)
 	}
 	v.element.Store(e)
@@ -96,6 +100,8 @@ func (v *Value) Update(i interface{}, wait time.Duration) error {
 	if wait <= 0 {
 		wait = 5 * time.Second
 	}
+
+	// 定时器，超时
 	stop := time.NewTimer(wait)
 	for atomic.LoadInt32(&e.count) != 0 {
 		select {

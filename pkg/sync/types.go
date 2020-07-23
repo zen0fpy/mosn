@@ -17,15 +17,23 @@
 
 package sync
 
+// WorkerFunc是一个worker,包含要执行job, 会被goroutine协程池的gorutine调用
 // WorkerFunc is called by the goroutine of the ShardWorkerPool and assumed never return in normal case.
 type WorkerFunc func(shard int, jobCh <-chan interface{})
 
+// 切片Job接口
 // ShardJob represents a job with its shard source.
 type ShardJob interface {
 	// Source get the job identifier for sharding.
 	Source() uint32
 }
 
+// ShardWorkerPool为goroutine提供了一个池，假设实际的goroutine本身是永久运行的
+// 并等待从JobChannel道传入的Job。属性指定其行为, 由WorkerFunc < sync.WorkerFunc >指定
+// 为了防止过度的锁争用，ShardWorkerPool还实现了其底层工作的分片。
+// 当Job提交到ShardWorkerPool时，需要使用源值来计算实际的碎片(goroutine)。
+// 同一分片中的Job是按FIFO顺序串行执行的。
+//
 // ShardWorkerPool provides a pool for goroutines, the actual goroutines themselves are assumed permanent running
 // and waiting for the incoming jobs from job channel. Its behaviour is specified by the
 // :ref:`WorkerFunc<sync.WorkerFunc>`.

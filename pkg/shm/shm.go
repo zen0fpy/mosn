@@ -25,6 +25,11 @@ import (
 	"mosn.io/mosn/pkg/log"
 )
 
+/*
+* 调用mmap创建一个大块内存映射，
+* 后续需要的话，从这里分配就行
+ */
+
 func Alloc(name string, size int) (*ShmSpan, error) {
 	path := path(name)
 

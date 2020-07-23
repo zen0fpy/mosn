@@ -15,6 +15,18 @@
  * limitations under the License.
  */
 
+/*
+*Host/主机：能够进行网络通信的实体（如移动设备、服务器上的应用程序）。
+*
+*Downstream/下游：下游主机连接到 Mosn，发送请求并接收响应。
+*
+*Upstream/上游：上游主机接收来自 Mosn 的连接和请求，并返回响应。
+*
+*Listener/监听器：监听器是命名网地址（例如，端口、unix domain socket等)，可以被下游客户端连接。Mosn 暴露一个或者多个监听器给下游主机连接。
+*
+*Cluster/集群：集群是指 Mosn 连接到的逻辑上相同的一组上游主机。Mosn 通过服务发现来发现集群的成员。Mosn 通过负载均衡策略决定将请求路由到哪个集群成员。
+ */
+
 package proxy
 
 import (

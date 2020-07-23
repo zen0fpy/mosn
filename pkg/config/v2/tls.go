@@ -46,6 +46,7 @@ type TLSConfig struct {
 	SdsConfig         *SdsConfig             `json:"sds_source,omitempty"`
 }
 
+// envoy sds 服务发现服务配置
 type SdsConfig struct {
 	CertificateConfig *SecretConfigWrapper
 	ValidationConfig  *SecretConfigWrapper
